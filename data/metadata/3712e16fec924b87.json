@@ -1,0 +1,17 @@
+{
+  "name": "buckcoin",
+  "symbol": "B",
+  "description": "buckcoin ($B) — Commodity Utility Market. Creator fees permanently assigned to protocol. Reward: GLDx (Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re).",
+  "image": "",
+  "showName": true,
+  "createdOn": "https://pump.fun",
+  "extensions": {
+    "cum": {
+      "rewardId": "gldx",
+      "rewardTicker": "GLDx",
+      "rewardMint": "Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re",
+      "rewardKind": "rwa",
+      "protocol": "Commodity Utility Market"
+    }
+  }
+}

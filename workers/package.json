@@ -1,0 +1,13 @@
+{
+  "name": "cum-fee-worker",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Phase 3 scaffold: fee claim → split → Jupiter swap → merkle credits (stubs only)",
+  "scripts": {
+    "worker:dry": "tsx src/dryRun.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}
