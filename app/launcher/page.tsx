@@ -182,10 +182,33 @@ export default function LauncherPage() {
           firstBuySol: buySol,
         };
         saveLaunchLocally(record);
+
+        let sharedOk = true;
+        try {
+          const shareRes = await fetch("/api/launches", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(record),
+          });
+          if (!shareRes.ok) {
+            sharedOk = false;
+            const errBody = await shareRes.json().catch(() => ({}));
+            console.warn(
+              "Shared launch POST failed",
+              (errBody as { error?: string }).error || shareRes.status,
+            );
+          }
+        } catch (shareErr) {
+          sharedOk = false;
+          console.warn("Shared launch POST failed", shareErr);
+        }
+
         setSuccess(record);
         setStatus("success");
         setMessage(
-          `Launched ${ticker}. Creator fees locked 100% to protocol wallet.`,
+          sharedOk
+            ? `Launched ${ticker}. Creator fees locked 100% to protocol wallet.`
+            : `Launched ${ticker}. Saved locally; shared Explore list needs LAUNCHES_GITHUB_TOKEN on Vercel.`,
         );
       } catch (err) {
         console.error(err);

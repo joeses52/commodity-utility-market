@@ -29,6 +29,9 @@ npm start
 |----------|----------|-------------|
 | `NEXT_PUBLIC_PROTOCOL_FEE_WALLET` | **Yes** for launch | Base58 pubkey that receives **100% (10000 bps)** of creator fees. **Locked:** `D7rAgM8vJzYVgYDnzqein9uYkRp4aW7BGkT99QSPBExy` |
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | No | Mainnet RPC. Defaults to `https://api.mainnet-beta.solana.com` (**rate-limited** — use Helius/QuickNode/etc for real usage). |
+| `LAUNCHES_GITHUB_TOKEN` | **Yes** on Vercel for shared Explore | Fine-grained PAT with Contents Read/Write on this repo only — used by `POST /api/launches` to append `data/launches.json`. |
+| `LAUNCHES_GITHUB_REPO` | No | Defaults to `joeses52/commodity-utility-market`. |
+| `LAUNCHES_GITHUB_BRANCH` | No | Defaults to `main`. |
 
 Example `.env.local`:
 
@@ -38,6 +41,25 @@ NEXT_PUBLIC_PROTOCOL_FEE_WALLET=D7rAgM8vJzYVgYDnzqein9uYkRp4aW7BGkT99QSPBExy
 ```
 
 If `NEXT_PUBLIC_PROTOCOL_FEE_WALLET` is missing, `/launcher` shows a setup message and will not create coins.
+
+
+## Shared Explore launches (GitHub file store)
+
+Real launches are appended to `data/launches.json` in this public repo so **every visitor** sees them on Explore (not just the launcher’s browser `localStorage`).
+
+1. Create a **fine-grained GitHub PAT** at https://github.com/settings/personal-access-tokens/new
+   - Resource owner: your user
+   - Repository access: **Only select repositories** → `joeses52/commodity-utility-market`
+   - Permissions: **Contents → Read and write** (nothing else required)
+2. In **Vercel → Project → Settings → Environment Variables**, add:
+   - `LAUNCHES_GITHUB_TOKEN` = the PAT
+   - Optional: `LAUNCHES_GITHUB_REPO=joeses52/commodity-utility-market`
+   - Optional: `LAUNCHES_GITHUB_BRANCH=main`
+3. **Redeploy** so the API route can `PUT` updated JSON after each successful launch.
+
+Without the token on Vercel, launches still succeed on-chain and save to localStorage, but the shared Explore list will not update (launcher shows a warning).
+
+Locally (`npm run dev`), missing token falls back to writing `data/launches.json` on disk.
 
 ## Exact launch steps (Phase 2)
 
@@ -49,7 +71,7 @@ If `NEXT_PUBLIC_PROTOCOL_FEE_WALLET` is missing, `/launcher` shows a setup messa
    - **Metadata:** `POST /api/metadata` stores JSON under `data/metadata/` and returns a same-origin URI (demo only — production should use permanent IPFS/Arweave).
    - **Tx1:** `@pump-fun/pump-sdk` `createV2Instruction` (or `createV2AndBuyInstructions` if first-buy &gt; 0). Mint keypair is generated in-browser and partial-signs; your wallet pays fees.
    - **Tx2:** `createFeeSharingConfig` then `updateFeeSharesV2` with **one shareholder**: protocol wallet at **10000 bps**. This locks fee share permanently (launcher gets **0%**).
-6. Success UI shows mint + `https://pump.fun/coin/<mint>`. Launch record also saved to `localStorage` for Phase 3 prep.
+6. Success UI shows mint + `https://pump.fun/coin/<mint>`. Launch record saved to `localStorage` and posted to `/api/launches` (shared `data/launches.json` when `LAUNCHES_GITHUB_TOKEN` is set).
 
 ## Security notes
 
@@ -68,12 +90,13 @@ If `NEXT_PUBLIC_PROTOCOL_FEE_WALLET` is missing, `/launcher` shows a setup messa
 
 | Path | What you get |
 |------|----------------|
-| `/` | Explore — mock coin cards |
+| `/` | Explore — live shared launches + local + demo samples |
 | `/launcher` | Real launch: wallet + create + fee lock |
 | `/coin/[mint]` | Mock coin detail |
 | `/docs` | Plain-English docs |
 | `/profile` | Profile stub |
 | `/api/metadata` | Demo metadata host (POST create, GET by id) |
+| `/api/launches` | Shared launches list (GET) + append (POST → GitHub `data/launches.json`) |
 
 ## Stack
 
